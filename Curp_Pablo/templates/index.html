@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Léxico y Sintáctico de CURP</title>
+    <style>
+        /* Estilos generales del cuerpo */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f3f3;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Contenedor principal */
+        .container {
+            max-width: 600px;
+            background-color: #dbe9d9;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Estilo del título */
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color:black;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 3px solid yellow;
+            padding-bottom: 10px;
+        }
+        
+        /* Sección de entrada y botones */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #8b7373;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #0078d7;
+            outline: none;
+        }
+        
+        /* Botones */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: flex-end;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: 1px solid #8b4038;
+            background-color: #8b4038;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        button:hover {
+            background-color: #8b4038;
+            border-color: #8b4038;
+        }
+        
+        button#clearButton {
+            background-color: #c1c1c1;
+            color: #333;
+            border: 1px solid #c1c1c1;
+        }
+        button#clearButton:hover {
+            background-color: #c1c1c1;
+            border-color: #c1c1c1;
+        }
+        
+        /* Mensaje de validación */
+        #validationMessage {
+            font-weight: bold;
+            text-align: center;
+            font-size: 18px;
+            color: #d9534f;
+            margin-bottom: 15px;
+        }
+        
+        /* Tabla de análisis léxico */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid black;
+            text-align: left;
+        }
+        th {
+            background-color: #0078d7;
+            color: white;
+        }
+        
+        /* Total */
+        #total {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 18px;
+            color: #0078d7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analizador Léxico y Sintáctico de CURP</h1>
+        
+        <div class="input-section">
+            <input type="text" id="curpInput" placeholder="Ingresa tu CURP" required>
+            
+            <!-- Botones alineados horizontalmente -->
+            <div class="button-group">
+                <button onclick="analyzeCURP()">Analizar</button>
+                <button id="clearButton" onclick="clearFields()">Borrar</button>
+            </div>
+        </div>
+        
+        <!-- Mensaje de validación -->
+        <div id="validationMessage"></div>
+        
+        <!-- Tabla de análisis léxico -->
+        <table id="lexicalTable" style="display: none;">
+            <tr><th>Tipo de Token</th><th>Valor</th></tr>
+            <tr><td>Apellido Paterno</td><td id="apellidoPaterno"></td></tr>
+            <tr><td>Apellido Materno</td><td id="apellidoMaterno"></td></tr>
+            <tr><td>Nombre</td><td id="nombre"></td></tr>
+            <tr><td>Fecha de Nacimiento</td><td id="fechaNacimiento"></td></tr>
+            <tr><td>Género</td><td id="genero"></td></tr>
+            <tr><td>Estado</td><td id="estado"></td></tr>
+            <tr><td>Consonantes Internas</td><td id="consonantesInternas"></td></tr>
+            <tr><td>Homoclave</td><td id="homoclave"></td></tr>
+            <tr><td>Dígito Verificador</td><td id="digitoVerificador"></td></tr>
+        </table>
+        
+        <!-- Total de tokens -->
+        <div id="total"></div>
+    </div>
+
+    <script>
+        function analyzeCURP() {
+            const curp = document.getElementById("curpInput").value;
+            
+            fetch("/analyze", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: `curp=${encodeURIComponent(curp)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const lexicalData = data.lexical_analysis;
+                const validationMessage = data.syntactic_validation;
+                document.getElementById("validationMessage").innerText = validationMessage;
+
+                if (lexicalData) {
+                    document.getElementById("lexicalTable").style.display = "table";
+                    document.getElementById("apellidoPaterno").innerText = lexicalData["Apellido Paterno"];
+                    document.getElementById("apellidoMaterno").innerText = lexicalData["Apellido Materno"];
+                    document.getElementById("nombre").innerText = lexicalData["Nombre"];
+                    document.getElementById("fechaNacimiento").innerText = lexicalData["Fecha de Nacimiento"];
+                    document.getElementById("genero").innerText = lexicalData["Género"];
+                    document.getElementById("estado").innerText = lexicalData["Estado"];
+                    document.getElementById("consonantesInternas").innerText = lexicalData["Consonantes Internas"];
+                    document.getElementById("homoclave").innerText = lexicalData["Homoclave"];
+                    document.getElementById("digitoVerificador").innerText = lexicalData["Dígito Verificador"];
+                } else {
+                    document.getElementById("lexicalTable").style.display = "none";
+                }
+            });
+        }
+
+        function clearFields() {
+            document.getElementById("curpInput").value = "";
+            document.getElementById("validationMessage").innerText = "";
+            document.getElementById("lexicalTable").style.display = "none";
+            document.getElementById("total").innerText = "";
+        }
+    </script>
+</body>
+</html>
